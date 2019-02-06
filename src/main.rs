@@ -16,8 +16,9 @@ fn main() -> Result<()> {
     match args.len() {
         arg if arg < 1 => println!("Usage: jlox [script]"),
         arg if arg == 1 => run_file(&args[0])?,
-        _ => run_prompt(),
+        _ => run_prompt()?,
     };
+
     Ok(())
 }
 
@@ -30,12 +31,12 @@ fn run_file(file: &String) -> Result<()> {
     Ok(())
 }
 
-fn run_prompt() {
+fn run_prompt() -> Result<()> {
     loop {
-        println!("user>");
+        println!(">");
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("Somethin wrong");
-        run(&input);
+        run(&input)?
     }
 }
 
