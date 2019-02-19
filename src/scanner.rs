@@ -64,8 +64,20 @@ impl Scanner {
             Some('+') => add_token(TokenType::PLUS),
             Some(';') => add_token(TokenType::SEMICOLON),
             Some('*') => add_token(TokenType::STAR),
-            Some('!') => add_token(TokenType::BANG_EQUAL),
-            Some('=') => add_token(
+            Some('!') => {
+                if self._match('=') {
+                    add_token(TokenType::BANG_EQUAL);
+                } else {
+                    add_token(TokenType::BANG);
+                }
+            },
+            Some('=') => {
+                if self._match('=') {
+                    add_token(TokenType::EQUAL_EQUAL);
+                } else {
+                    add_token(TokenType::BANG_EQUAL);
+                }
+            }
         }
     }
 
@@ -79,7 +91,7 @@ impl Scanner {
         res
     }
 
-    fn _match (expected_char) -> bool {
+    fn _match (expected_char: char) -> bool {
          if self.is_end() {
              return false;
          }
