@@ -77,7 +77,45 @@ impl Scanner {
                 } else {
                     add_token(TokenType::BANG_EQUAL);
                 }
-            }
+            },
+            Some('<') => {
+                if self._match('=') {
+                    add_token(TokenType::LESS_EQUAL);
+                } else {
+                    add_token(TokenType::LESS);
+                }
+
+            },
+            Some('>') => {
+                if self._match('=') {
+                    add_token(TokenType::GREATER_EQUAL);
+                } else {
+                    add_token(TokenType::GREATER);
+                }
+
+            },
+            Some('/') => {
+                if self._match('/') {
+                    while self.peek !== '\n' && !self.is_end() {
+                        self.advance();
+                    }
+                } else if self._match('*') {
+                    self.scan_block_comment();
+                } else {
+                    self.add_token(TokenType::SLASH);
+                }
+            },
+            Some(' ') || Some('\r') || Some('\t') => (),
+            Some('\n') => self.line += 1;
+            Some '"' => self.scan_string(),
+             _ => if c.is_numeric() {
+                 self.scanNumber();
+             } else if c.isphanumeric() {
+                 self.scan_identifier();
+             } else {
+                 panic!("unexpected caracter");
+             }
+
         }
     }
 
@@ -106,6 +144,66 @@ impl Scanner {
     fn add_token (&mut self, token: TokenType, text: Option<&str>) {
         let text = &self.source.get(self.start..self.current).unwrap();
         self.tokens.push(Token::new(token, text, HashMap::new(), self.line));
+    }
+
+    fn scan_identifier(&self) {
+        while self.peek().is_alphanumeric() {
+            self.advance();
+        }
+        let text = self.source.get(self.start, self.current).unwrap();
+        const type = text in self.keywords ? self.keywords[text] : TokenType::IDENTIFIER;
+        self.add_token(type);
+    }
+
+    fn peek(&mut self) -> char {
+        if self.is_end() {
+            return '\0';
+        }
+        self.source.get(self.current).unwrap()
+
+    }
+
+    fn scan_string(&self) {
+        while self.peek() != '"' && !self.is_end() {
+            if self.peel() == '\n' {
+                self.line += 1;
+            }
+            self.advance();
+        }
+
+        if self.is_end() {
+            panic!(self.line, "Unterminated string.");
+        }
+
+        self.advance();
+
+        let value = self.source.get(self.start + 1, self.curent -1);
+        self.add_token(TokenType::STRING, value);
+    }
+
+    fn scan_number(&self) {
+        while self.peek().is_numeric() {
+            self.advance();
+        }
+
+        if self.peek == '.' && self.peek_next().is_numeric() {
+            self.advance();
+        }
+
+        while self.peek().is_numeric() {
+            self.advance();
+        }
+
+        self.add_token(TokenType::NUMBER, self.source.get(self.start, self.current));
+
+    }
+
+    fn peekNext() {
+        if self.current + 1 >= self.source.len() {
+            return '\0';
+        }
+        return self.source.get(current + 1).unwrap();
+
     }
 
 
