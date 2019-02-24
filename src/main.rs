@@ -1,9 +1,13 @@
+mod tkt;
+mod token;
+
 use std::env;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 #[macro_use]
 extern crate error_chain;
+mod scanner;
 
 error_chain! {
     foreign_links {
