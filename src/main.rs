@@ -1,6 +1,3 @@
-mod tkt;
-mod token;
-
 use std::env;
 use std::fs::File;
 use std::io;
@@ -8,6 +5,7 @@ use std::io::prelude::*;
 #[macro_use]
 extern crate error_chain;
 mod scanner;
+use crate::scanner::scan_tokens;
 
 error_chain! {
     foreign_links {
@@ -45,8 +43,7 @@ fn run_prompt() -> Result<()> {
 }
 
 fn run(source: &String) -> Result<()> {
-    for token in source.split(' ') {
-        println!("{:?}", token);
-    }
+    let tokens = scan_tokens(&source).expect("tokens vectors");
+    dbg!(tokens);
     Ok(())
 }

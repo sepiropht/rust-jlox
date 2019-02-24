@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Token {
     // Single-character tokens.
     LEFT_PAREN,
@@ -63,9 +64,14 @@ fn single_token(ch: char) -> Option<Token> {
 pub fn scan_tokens(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = vec![];
     let mut iter = source.chars().peekable();
-
+    dbg!(&source);
     loop {
-        let ch = iter.next().unwrap();
+        let ch = iter.next();
+        if ch.is_none() {
+            break;
+        }
+        let ch = ch.unwrap();
+
         if let Some(token) = single_token(ch) {
             tokens.push(token);
             continue;
@@ -78,12 +84,12 @@ pub fn scan_tokens(source: &str) -> Result<Vec<Token>, String> {
                 loop {
                     match iter.peek() {
                         Some('a'...'z') | Some('A'...'Z') | Some('_') => {
-                            name.push(iter.next().unwrap());
+                            name.push(iter.next().expect("letter" ));
                         }
                         _ => break,
                     }
                 }
-                tokens.push(match name {
+                tokens.push(match name.as_str() {
                     "and" => Token::AND,
                     "class" => Token::CLASS,
                     "else" => Token::ELSE,
@@ -109,77 +115,86 @@ pub fn scan_tokens(source: &str) -> Result<Vec<Token>, String> {
                 loop {
                     match iter.peek() {
                         Some('0'...'9') => {
-                            number.push(iter.next().unwrap());
+                            number.push(iter.next().expect("number"));
                         }
                         _ => {
                             break;
                         }
                     }
                 }
-                tokens.push(Token::INTEGER(number as u32));
+                tokens.push(Token::NUMBER(number.parse().expect("number")));
             }
 
             '"' => {
                 let mut name = String::new();
                 loop {
                     match iter.peek() {
-                        Some('a'...'z') | Some('A'...'Z') | Some('_') => {
-                            name.push(iter.next().unwrap());
-                        }
-                        '"' => {
+                        Some('"') => {
                             iter.next();
                             break;
+                        }
+                        _ => {
+                            name.push(iter.next().expect("letter 2"));
                         }
                     }
                 }
                 tokens.push(Token::STRING(name));
             }
 
-            "!" => {
-                iter.next();
-                tokens.push(match iter.peek() {
-                    Some('=') => Token::BANG_EQUAL,
-                    Some('_') => Token::BANG,
-                })
-            }
+            '!' => tokens.push(match iter.peek() {
+                Some('=') => {
+                    iter.next();
+                    Token::BANG_EQUAL
+                }
+                _ => panic!("no"),
+            }),
             '=' => {
-                iter.next();
                 tokens.push(match iter.peek() {
-                    Some('=') => Token::EQUAL_EQUAL,
-                    Some('_') => Token::BANG_EQUAL,
+                    Some('=') => {
+                        iter.next();
+                        Token::EQUAL_EQUAL
+                    }
+                    _ => Token::BANG_EQUAL,
                 });
             }
             '<' => {
-                iter.next();
                 tokens.push(match iter.peek() {
-                    Some('=') => Token::LESS_EQUAL,
-                    Some('_') => Token::LESS,
+                    Some('=') => {
+                        iter.next();
+                        Token::LESS_EQUAL
+                    }
+                    _ => Token::LESS,
                 });
             }
             '>' => {
-                iter.next();
                 tokens.push(match iter.peek() {
-                    Some('=') => Token::GREATER_EQUAL,
-                    Some('_') => Token::GREATER,
+                    Some('=') => {
+                        iter.next();
+                        Token::GREATER_EQUAL
+                    }
+                    _ => Token::GREATER,
                 });
             }
             '/' => match iter.peek() {
                 Some('/') => {
-                    while iter.peek() != Some('\n') {
-                        iter.next();
-                    }
+                    while iter.peek() != Some(&'\n') {
+                        dbg!(iter.next().unwrap());                    }
                 }
                 Some('*') => {
-                    while iter.peek() != Some('*') {
-                        iter.next();
+                    iter.next();
+                    dbg!("ICI ICI ICI ICI");
+                    dbg!(iter.peek().unwrap());
+                    while iter.peek() != Some(&'*') {
+                        dbg!("LA LA LA LA");
+                        dbg!(iter.next().unwrap());
                     }
                     iter.next();
                 }
-                Some('_') => tokens.push(Token::SLASH),
+                _ => tokens.push(Token::SLASH),
             },
             ' ' | '\n' => continue,
             c @ _ => {
-                return Err(format!("Unexpected token: {}", ch));
+                return Err(format!("Unexpected token: {}", c));
             }
         };
     }
