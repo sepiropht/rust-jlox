@@ -64,7 +64,7 @@ fn single_token(ch: char) -> Option<Token> {
 pub fn scan_tokens(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = vec![];
     let mut iter = source.chars().peekable();
-    dbg!(&source);
+    let mut line = 1;
     loop {
         let ch = iter.next();
         if ch.is_none() {
@@ -84,7 +84,7 @@ pub fn scan_tokens(source: &str) -> Result<Vec<Token>, String> {
                 loop {
                     match iter.peek() {
                         Some('a'...'z') | Some('A'...'Z') | Some('_') => {
-                            name.push(iter.next().expect("letter" ));
+                            name.push(iter.next().expect("letter"));
                         }
                         _ => break,
                     }
@@ -178,23 +178,27 @@ pub fn scan_tokens(source: &str) -> Result<Vec<Token>, String> {
             '/' => match iter.peek() {
                 Some('/') => {
                     while iter.peek() != Some(&'\n') {
-                        dbg!(iter.next().unwrap());                    }
+                        iter.next().unwrap();
+                    }
                 }
                 Some('*') => {
                     iter.next();
-                    dbg!("ICI ICI ICI ICI");
-                    dbg!(iter.peek().unwrap());
+                    iter.peek().unwrap();
                     while iter.peek() != Some(&'*') {
-                        dbg!("LA LA LA LA");
-                        dbg!(iter.next().unwrap());
+                        iter.next().unwrap();
                     }
                     iter.next();
                 }
                 _ => tokens.push(Token::SLASH),
             },
-            ' ' | '\n' => continue,
+            ' ' | '\n' => {
+                if ch == '\n' {
+                    line += 1;
+                }
+                continue
+            },
             c @ _ => {
-                return Err(format!("Unexpected token: {}", c));
+                return Err(format!("line: {}, Unexpected token: {}", line, c));
             }
         };
     }
